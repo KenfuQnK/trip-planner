@@ -20,34 +20,8 @@
 <body class="bg-zinc-950 text-white selection:bg-red-600 selection:text-white">
   <div id="root"></div>
 
-  <script type="text/babel" data-type="module">
+  <script type="text/babel">
     const { useState, useEffect, useMemo, useRef } = React;
-
-    // Cambio 2: Importación desde esm.sh con ?external=react
-    import {
-      CalendarDays,
-      Plane,
-      UtensilsCrossed,
-      Hotel,
-      House,
-      Landmark,
-      Trees,
-      Train,
-      Bus,
-      Car,
-      Sparkles,
-      Plus,
-      X,
-      Pencil,
-      Link as LinkIcon,
-      StickyNote,
-      Clock3,
-      Trash2,
-      Martini,
-      Footprints,
-      User,
-      Copy,
-    } from "https://esm.sh/lucide-react?external=react";
 
     const DAYS = [
       { key: "2026-09-11", label: "Viernes", dateLabel: "11 Sep 2026" },
@@ -60,22 +34,22 @@
     const HOUR_HEIGHT = 64;
     const SNAP_MINUTES = 15;
     const MIN_EVENT_MINUTES = 30;
-    const STORAGE_KEY = "trip-weekend-planner-events-v1";
+    const STORAGE_KEY = "trip-weekend-planner-events-v2";
     const GUTTER_WIDTH = 56;
 
     const ICONS = [
-      { key: "plane", label: "Avión", icon: Plane },
-      { key: "restaurant", label: "Restaurante", icon: UtensilsCrossed },
-      { key: "hotel", label: "Hotel", icon: Hotel },
-      { key: "home", label: "Casa", icon: House },
-      { key: "museum", label: "Museo", icon: Landmark },
-      { key: "park", label: "Parque", icon: Trees },
-      { key: "train", label: "Tren", icon: Train },
-      { key: "bus", label: "Bus", icon: Bus },
-      { key: "car", label: "Coche", icon: Car },
-      { key: "spa", label: "Spa", icon: Sparkles },
-      { key: "cocktail", label: "Coctelería", icon: Martini },
-      { key: "walk", label: "Andando", icon: Footprints },
+      { key: "plane", label: "Avión", icon: "✈️" },
+      { key: "restaurant", label: "Restaurante", icon: "🍽️" },
+      { key: "hotel", label: "Hotel", icon: "🏨" },
+      { key: "home", label: "Casa", icon: "🏠" },
+      { key: "museum", label: "Museo", icon: "🏛️" },
+      { key: "park", label: "Parque", icon: "🌳" },
+      { key: "train", label: "Tren", icon: "🚆" },
+      { key: "bus", label: "Bus", icon: "🚌" },
+      { key: "car", label: "Coche", icon: "🚗" },
+      { key: "spa", label: "Spa", icon: "✨" },
+      { key: "cocktail", label: "Coctelería", icon: "🍸" },
+      { key: "walk", label: "Andando", icon: "🚶" },
     ];
 
     const PALETTES = [
@@ -159,7 +133,7 @@
     }
 
     function getIconComponent(iconKey) {
-      return ICONS.find((item) => item.key === iconKey)?.icon || CalendarDays;
+      return ICONS.find((item) => item.key === iconKey)?.icon || "📅";
     }
 
     function buildEvent(day, start, end) {
@@ -196,14 +170,16 @@
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
               <h2 className="text-lg font-semibold text-slate-900">Editar bloque</h2>
               <button onClick={onClose} className="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">
-                <X className="h-5 w-5" />
+                <span className="text-lg leading-none">✖️</span>
               </button>
             </div>
 
             <div className="grid gap-4 px-4 py-4 lg:grid-cols-[1.6fr_1fr]">
               <div className="space-y-3">
                 <label className="block">
-                  <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700"><Pencil className="h-4 w-4" /> Título</span>
+                  <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <span className="text-sm">✏️</span> Título
+                  </span>
                   <input
                     value={draft.title}
                     onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -214,7 +190,9 @@
 
                 <div className="grid grid-cols-2 gap-3">
                   <label className="block">
-                    <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700"><Clock3 className="h-4 w-4" /> Inicio</span>
+                    <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <span className="text-sm">🕒</span> Inicio
+                    </span>
                     <input
                       type="time"
                       step={900}
@@ -228,7 +206,9 @@
                     />
                   </label>
                   <label className="block">
-                    <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700"><Clock3 className="h-4 w-4" /> Fin</span>
+                    <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <span className="text-sm">🕒</span> Fin
+                    </span>
                     <input
                       type="time"
                       step={900}
@@ -244,7 +224,9 @@
                 </div>
 
                 <label className="block">
-                  <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700"><StickyNote className="h-4 w-4" /> Notas</span>
+                  <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <span className="text-sm">📝</span> Notas
+                  </span>
                   <textarea
                     value={draft.notes}
                     onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
@@ -255,7 +237,9 @@
                 </label>
 
                 <div>
-                  <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700"><LinkIcon className="h-4 w-4" /> Enlace</span>
+                  <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <span className="text-sm">🔗</span> Enlace
+                  </span>
                   <div className="grid grid-cols-[1fr_auto] gap-2">
                     <input
                       value={draft.link}
@@ -270,7 +254,7 @@
                       disabled={!draft.link}
                       title="Copiar enlace"
                     >
-                      <Copy className="h-4 w-4" />
+                      <span className="text-sm">📋</span>
                     </button>
                   </div>
                 </div>
@@ -281,7 +265,6 @@
                   <p className="mb-2 text-sm font-medium text-slate-700">Icono</p>
                   <div className="grid grid-cols-6 gap-2">
                     {ICONS.map((item) => {
-                      const Icon = item.icon;
                       const selected = draft.icon === item.key;
                       return (
                         <button
@@ -290,7 +273,7 @@
                           onClick={() => setDraft({ ...draft, icon: item.key })}
                           className={`flex h-10 items-center justify-center rounded-xl border transition ${selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}
                         >
-                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="text-lg shrink-0">{item.icon}</span>
                         </button>
                       );
                     })}
@@ -342,7 +325,7 @@
                 onClick={() => onDelete(draft.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
               >
-                <Trash2 className="h-4 w-4" /> Eliminar
+                <span className="text-sm">🗑️</span> Eliminar
               </button>
               <div className="flex items-center gap-2">
                 <button onClick={onClose} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
@@ -371,7 +354,7 @@
               onClick={() => onCreateEvent(buildEvent(day.key, 9 * 60, 10 * 60), true)}
               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
-              <Plus className="h-4 w-4" /> Añadir
+              <span className="text-sm leading-none">➕</span> Añadir
             </button>
           </div>
         </div>
@@ -581,12 +564,12 @@
 
                     <div className="relative z-10 flex h-full flex-col gap-1 overflow-hidden pr-4 select-none">
                       <div className="flex items-center gap-2 text-sm font-semibold leading-tight md:text-[15px]">
-                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="text-sm shrink-0 leading-none">{Icon}</span>
                         <span className="truncate">{item.title}</span>
                         {item.price ? (
                           <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90">
                             {item.price} €
-                            {item.pricePerPerson ? <User className="h-3 w-3" /> : null}
+                            {item.pricePerPerson ? <span className="text-xs">👤</span> : null}
                           </span>
                         ) : null}
                       </div>
