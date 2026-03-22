@@ -608,7 +608,7 @@ function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEvent, isP
   );
 }
 
-default function TripWeekendPlanner() {
+function App() {
   const [events, setEvents] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
