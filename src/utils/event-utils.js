@@ -1,0 +1,59 @@
+import { PALETTES, ICONS, MIN_EVENT_MINUTES, HOUR_START, HOUR_END, DEFAULT_DAYS, CANVAS_TOP_PADDING } from "./constants.js";
+import { clamp, snapMinutes, minutesToTime, minutesToY, yToMinutes } from "./index.js";
+import { normalizeImportedDays } from "./date-utils.js";
+
+export function buildEvent(day, start, end) {
+  return {
+    id: crypto.randomUUID(),
+    day,
+    title: "Nuevo plan",
+    notes: "",
+    link: "",
+    price: "",
+    pricePerPerson: false,
+    icon: "calendar",
+    colorIndex: Math.floor(Math.random() * PALETTES.length),
+    start,
+    end,
+  };
+}
+
+export function normalizeImportedEvents(input, days = DEFAULT_DAYS) {
+  if (!Array.isArray(input)) throw new Error("Formato invalido");
+  return input
+    .map((item, index) => ({
+      id: typeof item.id === "string" && item.id ? item.id : `imported-${index}-${crypto.randomUUID()}`,
+      day: days.some((d) => d.key === item.day) ? item.day : days[0].key,
+      title: typeof item.title === "string" ? item.title : "Nuevo plan",
+      notes: typeof item.notes === "string" ? item.notes : "",
+      link: typeof item.link === "string" ? item.link : "",
+      price: item.price == null ? "" : String(item.price),
+      pricePerPerson: Boolean(item.pricePerPerson),
+      icon: ICONS.some((i) => i.key === item.icon) ? item.icon : "train",
+      colorIndex: Number.isFinite(item.colorIndex) ? clamp(Number(item.colorIndex), 0, PALETTES.length - 1) : 0,
+      start: clamp(Number(item.start) || 0, HOUR_START * 60, HOUR_END * 60),
+      end: clamp(Number(item.end) || MIN_EVENT_MINUTES, HOUR_START * 60, HOUR_END * 60),
+    }))
+    .map((item) => ({
+      ...item,
+      end: Math.max(item.start + MIN_EVENT_MINUTES, item.end),
+    }));
+}
+
+export function runSelfChecks() {
+  console.assert(clamp(5, 0, 10) === 5, "clamp basic failed");
+  console.assert(clamp(-1, 0, 10) === 0, "clamp min failed");
+  console.assert(clamp(20, 0, 10) === 10, "clamp max failed");
+  console.assert(snapMinutes(7) === 0, "snap down failed");
+  console.assert(snapMinutes(8) === 15, "snap up failed");
+  console.assert(minutesToTime(0) === "00:00", "minutesToTime midnight failed");
+  console.assert(minutesToTime(75) === "01:15", "minutesToTime 75 failed");
+  console.assert(minutesToY(60) === CANVAS_TOP_PADDING + 64, "minutesToY failed");
+  console.assert(yToMinutes(64) === 60, "yToMinutes failed");
+  console.assert(normalizeImportedDays(["2026-09-14", "2026-09-11", "2026-09-14"]).length === 2, "normalizeImportedDays failed");
+  const normalizedDays = normalizeImportedDays(DEFAULT_DAYS);
+  const normalized = normalizeImportedEvents([{ day: normalizedDays[1].key, start: 60, end: 70, icon: "plane" }], normalizedDays);
+  console.assert(Array.isArray(normalized) && normalized.length === 1, "normalizeImportedEvents basic failed");
+  console.assert(normalized[0].end >= normalized[0].start + MIN_EVENT_MINUTES, "normalizeImportedEvents min duration failed");
+  console.assert(normalized[0].icon === "plane", "normalizeImportedEvents icon failed");
+}
