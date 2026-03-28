@@ -1,5 +1,6 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import {
   CalendarDays,
   Plane,
@@ -326,8 +327,8 @@ function FallbackPanel({ fallbackData, onClose, onImportText }) {
                 placeholder="Pega aqui el JSON exportado..."
               />
               <div className="flex justify-end gap-2">
-                <button onClick={onClose} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
-                <button onClick={() => onImportText(importText)} className="rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Importar JSON pegado</button>
+                <button onClick={onClose} className="cursor-pointer rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
+                <button onClick={() => onImportText(importText)} className="cursor-pointer rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Importar JSON pegado</button>
               </div>
             </>
           ) : null}
@@ -432,7 +433,7 @@ function EventModal({ event, onClose, onSave, onDelete }) {
                 {ICONS.map((item) => {
                   const Icon = item.icon;
                   const selected = draft.icon === item.key;
-                  return <button key={item.key} title={item.label} onClick={() => setDraft({ ...draft, icon: item.key })} className={`flex h-10 items-center justify-center rounded-xl border transition ${selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}><Icon className="h-4 w-4 shrink-0" /></button>;
+                  return <button key={item.key} title={item.label} onClick={() => setDraft({ ...draft, icon: item.key })} className={`cursor-pointer flex h-10 items-center justify-center rounded-xl border transition ${selected ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-slate-400"}`}><Icon className="h-4 w-4 shrink-0" /></button>;
                 })}
               </div>
             </div>
@@ -440,7 +441,7 @@ function EventModal({ event, onClose, onSave, onDelete }) {
             <div>
               <p className="mb-2 text-sm font-medium text-slate-700">Color</p>
               <div className="grid grid-cols-3 gap-2">
-                {PALETTES.map((palette, index) => <button key={index} onClick={() => setDraft({ ...draft, colorIndex: index })} className={`h-12 rounded-2xl border-2 transition ${palette.card} ${draft.colorIndex === index ? "scale-95 border-slate-950" : "border-white"}`} />)}
+                {PALETTES.map((palette, index) => <button key={index} onClick={() => setDraft({ ...draft, colorIndex: index })} className={`cursor-pointer h-12 rounded-2xl border-2 transition ${palette.card} ${draft.colorIndex === index ? "scale-95 border-slate-950" : "border-white"}`} />)}
               </div>
             </div>
 
@@ -450,7 +451,7 @@ function EventModal({ event, onClose, onSave, onDelete }) {
                 <input type="number" min="0" step="0.01" value={draft.price ?? ""} onChange={(e) => setDraft({ ...draft, price: e.target.value })} className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-slate-400" placeholder="Ej. 18.50" />
               </label>
               <label className="flex h-[42px] items-center gap-2 rounded-2xl border border-slate-200 px-3 text-sm text-slate-700 whitespace-nowrap">
-                <input type="checkbox" checked={Boolean(draft.pricePerPerson)} onChange={(e) => setDraft({ ...draft, pricePerPerson: e.target.checked })} className="h-4 w-4 rounded" />
+                <input type="checkbox" checked={Boolean(draft.pricePerPerson)} onChange={(e) => setDraft({ ...draft, pricePerPerson: e.target.checked })} className="cursor-pointer h-4 w-4 rounded" />
                 <span>Precio por persona</span>
               </label>
             </div>
@@ -458,10 +459,10 @@ function EventModal({ event, onClose, onSave, onDelete }) {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3">
-          <button onClick={() => onDelete(draft.id)} className="inline-flex items-center gap-2 rounded-2xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"><Trash2 className="h-4 w-4" /> Eliminar</button>
+          <button onClick={() => onDelete(draft.id)} className="cursor-pointer inline-flex items-center gap-2 rounded-2xl border border-rose-200 px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"><Trash2 className="h-4 w-4" /> Eliminar</button>
           <div className="flex items-center gap-2">
-            <button onClick={onClose} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
-            <button onClick={() => onSave({ ...draft, end: Math.max(draft.start + MIN_EVENT_MINUTES, draft.end) })} className="rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Guardar</button>
+            <button onClick={onClose} className="cursor-pointer rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
+            <button onClick={() => onSave({ ...draft, end: Math.max(draft.start + MIN_EVENT_MINUTES, draft.end) })} className="cursor-pointer rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Guardar</button>
           </div>
         </div>
       </div>
@@ -502,8 +503,8 @@ function AddDaysModal({ existingDayKeys, initialMonthKey, onClose, onAccept }) {
       <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col rounded-3xl border border-white/70 bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Anadir dias</h2>
-            <p className="text-sm text-slate-500">Selecciona uno o varios dias para insertarlos en el canvas.</p>
+            <h2 className="text-lg font-semibold text-slate-900">Añadir días</h2>
+            <p className="text-sm text-slate-500">Selecciona uno o varios días para insertarlos en el canvas.</p>
           </div>
           <button onClick={onClose} className="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><X className="h-5 w-5" /></button>
         </div>
@@ -536,35 +537,35 @@ function AddDaysModal({ existingDayKeys, initialMonthKey, onClose, onAccept }) {
             })}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">{selectedKeys.length === 0 ? "No hay dias seleccionados." : `${selectedKeys.length} dia(s) listos para anadir.`}</div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">{selectedKeys.length === 0 ? "No hay días seleccionados." : `${selectedKeys.length} día(s) listos para Añadir.`}</div>
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-4 py-3">
-          <button onClick={onClose} className="rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
-          <button onClick={() => onAccept(selectedKeys)} disabled={selectedKeys.length === 0} className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-40"><Plus className="h-4 w-4" /> Aceptar</button>
+          <button onClick={onClose} className="cursor-pointer rounded-2xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Cancelar</button>
+          <button onClick={() => onAccept(selectedKeys)} disabled={selectedKeys.length === 0} className="cursor-pointer inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-40"><Plus className="h-4 w-4" /> Aceptar</button>
         </div>
       </div>
     </div>
   );
 }
-function DayHeader({ day, onCreateEvent, onDeleteDay, canDeleteDay }) {
+function DayHeader({ day, onCreateEvent, onDeleteDay, canDeleteDay, isCaptureMode }) {
   return (
-    <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 px-4 py-2.5 backdrop-blur print:bg-white">
+    <div className={`planner-day-header border-b border-slate-200 px-4 py-2.5 print:bg-white ${isCaptureMode ? "relative bg-white" : "sticky top-0 z-20 bg-white/80 backdrop-blur"}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="truncate text-base font-semibold text-slate-900">{day.label}</div>
           <div className="truncate text-sm text-slate-500">{day.dateLabel}</div>
         </div>
         <div className="flex items-center gap-2 print:hidden">
-          <button onClick={() => onCreateEvent(buildEvent(day.key, 9 * 60, 10 * 60), true)} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"><Plus className="h-4 w-4" /> Anadir</button>
-          <button onClick={() => onDeleteDay(day)} disabled={!canDeleteDay} title={canDeleteDay ? "Eliminar dia" : "Debe quedar al menos un dia"} className="inline-flex items-center justify-center rounded-2xl border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
+          <button onClick={() => onCreateEvent(buildEvent(day.key, 9 * 60, 10 * 60), true)} className="cursor-pointer inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-2.5 py-1.5 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"><Plus className="h-4 w-4" /> Añadir</button>
+          <button onClick={() => onDeleteDay(day)} disabled={!canDeleteDay} title={canDeleteDay ? "Eliminar día" : "Debe quedar al menos un día"} className="cursor-pointer line-flex items-center justify-center rounded-2xl border border-rose-200 p-2 text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-40"><Trash2 className="h-4 w-4" /></button>
         </div>
       </div>
     </div>
   );
 }
 
-function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEvent, isPanning, onMiddleMouseDown, onDeleteDay, canDeleteDay, compactMode }) {
+function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEvent, isPanning, onMiddleMouseDown, onDeleteDay, canDeleteDay, compactMode, isCaptureMode }) {
   const contentRef = useRef(null);
   const dragState = useRef(null);
   const selectionState = useRef(null);
@@ -655,7 +656,7 @@ function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEvent, isP
 
   return (
     <div className="relative flex-1 border-r border-slate-200/70 bg-white/28 last:border-r-0 print:bg-white/100" style={{ minWidth: compactMode ? 0 : DAY_MIN_WIDTH }}>
-      <DayHeader day={day} onCreateEvent={onCreateEvent} onDeleteDay={onDeleteDay} canDeleteDay={canDeleteDay} />
+      <DayHeader day={day} onCreateEvent={onCreateEvent} onDeleteDay={onDeleteDay} canDeleteDay={canDeleteDay} isCaptureMode={isCaptureMode} />
       <div ref={contentRef} className={`relative ${isPanning ? "cursor-grabbing" : "cursor-default"} print:cursor-default`} onPointerDown={beginSelection} onMouseDown={onMiddleMouseDown} onContextMenu={(event) => event.preventDefault()} style={{ height: CANVAS_TOP_PADDING + (HOUR_END - HOUR_START) * HOUR_HEIGHT }}>
         <div className="absolute inset-y-0 left-0 select-none border-r border-slate-200/60" style={{ width: GUTTER_WIDTH }}>
           {Array.from({ length: HOUR_END - HOUR_START + 1 }).map((_, index) => {
@@ -694,13 +695,14 @@ function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEvent, isP
   );
 }
 
-function SideMenu({ onExport, onImportClick, onPrint, onAddDays, isBusy }) {
+function SideMenu({ onExportImage, onExport, onImportClick, onPrint, onAddDays, isBusy }) {
   return (
     <div className="flex w-[68px] shrink-0 flex-col items-center gap-4 bg-black px-3 py-4 print:hidden">
-      <button onClick={onAddDays} title="Anadir dias" className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Plus className="h-5 w-5" /></button>
-      <button onClick={onImportClick} title="Importar" className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Upload className="h-5 w-5" /></button>
-      <button onClick={onExport} title="Exportar" className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Download className="h-5 w-5" /></button>
-      <button onClick={onPrint} title="Imprimir" className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Printer className="h-5 w-5" /></button>
+      <button onClick={onAddDays} title="Añadir días" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Plus className="h-5 w-5" /></button>
+      <button onClick={onImportClick} title="Importar" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Download className="h-5 w-5" /></button>
+      <button onClick={onExport} title="Exportar" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Upload className="h-5 w-5" /></button>
+      <button onClick={onPrint} title="Imprimir" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Printer className="h-5 w-5" /></button>
+      <button onClick={onExportImage} title="Guardar PNG" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><ImageIcon className="h-5 w-5" /></button>
     </div>
   );
 }
@@ -724,7 +726,8 @@ function App() {
   const [events, setEvents] = useState(initialState.events);
   const [editingEvent, setEditingEvent] = useState(null);
   const [isPanning, setIsPanning] = useState(false);
-  const [isBusy] = useState(false);
+  const [isCaptureMode, setIsCaptureMode] = useState(false);
+  const [isExportingImage, setIsExportingImage] = useState(false);
   const [fallbackData, setFallbackData] = useState(null);
   const [isAddDaysOpen, setIsAddDaysOpen] = useState(false);
   const scrollRef = useRef(null);
@@ -756,6 +759,19 @@ function App() {
     window.removeEventListener("mousemove", handlePanMove);
     window.removeEventListener("mouseup", stopPan);
   }, [handlePanMove, stopPan]);
+
+  useEffect(() => {
+    const enableCaptureMode = () => setIsCaptureMode(true);
+    const disableCaptureMode = () => setIsCaptureMode(false);
+
+    window.addEventListener("beforeprint", enableCaptureMode);
+    window.addEventListener("afterprint", disableCaptureMode);
+
+    return () => {
+      window.removeEventListener("beforeprint", enableCaptureMode);
+      window.removeEventListener("afterprint", disableCaptureMode);
+    };
+  }, []);
 
   const createEvent = (event, openAfterCreate = false) => {
     setEvents((prev) => [...prev, event]);
@@ -823,7 +839,7 @@ function App() {
 
   const handleImportClick = () => {
     const opened = tryOpenFilePicker(importInputRef);
-    if (!opened) setFallbackData({ type: "import-json", title: "Importar JSON", description: "Este entorno ha bloqueado el selector de archivos. Pega aqui el JSON exportado para reemplazar todos los dias y eventos actuales.", content: "" });
+    if (!opened) setFallbackData({ type: "import-json", title: "Importar JSON", description: "Este entorno ha bloqueado el selector de archivos. Pega aqui el JSON exportado para reemplazar todos los días y eventos actuales.", content: "" });
   };
 
   const applyImportedJson = (text) => {
@@ -862,14 +878,59 @@ function App() {
     }
   };
 
+  const handleExportImage = useCallback(async () => {
+    if (!scrollRef.current || isExportingImage) return;
+
+    const exportNode = scrollRef.current;
+    setIsExportingImage(true);
+    setIsCaptureMode(true);
+
+    try {
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      const targetWidth = Math.max(exportNode.scrollWidth, exportNode.clientWidth);
+      const targetHeight = Math.max(exportNode.scrollHeight, exportNode.clientHeight);
+
+      const dataUrl = await toPng(exportNode, {
+        cacheBust: true,
+        backgroundColor: "#eff4fb",
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        width: targetWidth,
+        height: targetHeight,
+        canvasWidth: targetWidth,
+        canvasHeight: targetHeight,
+        style: {
+          width: `${targetWidth}px`,
+          height: `${targetHeight}px`,
+          overflow: "visible",
+        },
+        filter: (node) => !node.classList?.contains("print:hidden"),
+      });
+
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const filename = `trip-planner-${new Date().toISOString().slice(0, 10)}.png`;
+      const ok = tryDownloadBlob(blob, filename);
+
+      if (!ok) {
+        alert("No se ha podido descargar el PNG en este entorno.");
+      }
+    } catch {
+      alert("No se ha podido generar la imagen del planning.");
+    } finally {
+      setIsCaptureMode(false);
+      setIsExportingImage(false);
+    }
+  }, [isExportingImage]);
+
   return (
-    <div className="h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_28%),linear-gradient(180deg,_#f9fbff_0%,_#eff4fb_100%)] text-slate-900 print:bg-white">
+    <div className="h-screen overflow-hidden bg-[radíal-gradient(circle_at_top,_rgba(56,189,248,0.14),_transparent_28%),linear-gradient(180deg,_#f9fbff_0%,_#eff4fb_100%)] text-slate-900 print:bg-white">
       <div className="flex h-full print:block">
-        <SideMenu onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isBusy} />
+        <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} />
         <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
         <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} h-full flex-1 overflow-auto print:overflow-visible`}>
           <div className="grid print:min-w-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`, minWidth: gridMinWidth || undefined }}>
-            {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={compactMode} />)}
+            {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={compactMode} isCaptureMode={isCaptureMode} />)}
           </div>
         </div>
       </div>

@@ -1,19 +1,34 @@
-# React + Vite
+# Trip Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Descripción
 
-Currently, two official plugins are available:
+Esta app permite crear rapidamente un planning diario útil para organizar un viaje.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Configuración 
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
+Este proyecto está hecho en React + Vite.
+Se ha adaptado para que pueda autogenerarse en Github Pages:
 
 https://kenfuqnk.github.io/trip-planner/
+
+Además, gracias al manifest.json se puede instalar como app del móvil.
+
+## Instalación
+Si abres el enlace con Google Chrome en Android, la primera vez te aparecerá la opción de poder instalarlo como app del móvil. Si no te aparece, o no dispones de Android, prueba estos métodos:
+
+En Android:
+Abre el enlace y ábrelo en Google Chrome para Android.
+Toca el icono de Compartir (el cuadrado con la flecha hacia arriba) situado en la barra de direcciones.
+Desliza el menú hacia abajo y busca la opción "Añadir a la pantalla de inicio". Nota: Si no aparece, baja hasta el fondo, pulsa "Editar acciones" y comprueba que la opción no esté desactivada.
+En iOS (iPhone):
+Opción 1 - Google Chrome:
+
+Abre el enlace y ábrelo en Google Chrome para iPhone.
+Toca el icono de Compartir (el cuadrado con la flecha hacia arriba) situado en la barra de direcciones.
+Desliza el menú hacia abajo y busca la opción "Añadir a la pantalla de inicio". Nota: Si no aparece, baja hasta el fondo, pulsa "Editar acciones" y comprueba que la opción no esté desactivada.
+Opción 2 - Safari:
+
+Copia el enlace y ábrelo en Safari.
+Toca el icono de Compartir en el centro de la barra de navegación inferior.
+Desliza hacia abajo en el menú emergente y toca "Añadir a la pantalla de inicio".
+Confirma el nombre y pulsa "Añadir".
