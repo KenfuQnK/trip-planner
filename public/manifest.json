@@ -2,12 +2,12 @@
   "name": "Trip Planner",
   "short_name": "Trip Planner",
   "display": "standalone",
-  "start_url": "/trip-planner/",
+  "start_url": "./",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "/trip-planner/icon.png",
+      "src": "./icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
