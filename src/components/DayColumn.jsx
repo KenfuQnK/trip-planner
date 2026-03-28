@@ -13,7 +13,22 @@ import {
 import { clamp, getIconComponent, minutesToTime, minutesToY, yToMinutes } from "../utils/index.js";
 import { buildEvent } from "../utils/event-utils.js";
 
-export function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEvent, isPanning, onMiddleMouseDown, onDeleteDay, canDeleteDay, compactMode, isCaptureMode }) {
+export function DayColumn({
+  day,
+  events,
+  onCreateEvent,
+  onOpenEvent,
+  onUpdateEvent,
+  isPanning,
+  onMiddleMouseDown,
+  onDeleteDay,
+  canDeleteDay,
+  compactMode,
+  isCaptureMode,
+  showHeader = true,
+  showHourGutter = true,
+  enableEventDrag = true,
+}) {
   const contentRef = useRef(null);
   const dragState = useRef(null);
   const selectionState = useRef(null);
@@ -87,6 +102,7 @@ export function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEve
   };
 
   const startDragMove = (e, item) => {
+    if (!enableEventDrag) return;
     e.stopPropagation();
     if (e.button !== 0) return;
     dragState.current = { type: "move", id: item.id, offset: getPointerContentY(e.clientY) - minutesToY(item.start), duration: item.end - item.start };
@@ -95,6 +111,7 @@ export function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEve
   };
 
   const startResize = (e, item, edge) => {
+    if (!enableEventDrag) return;
     e.stopPropagation();
     if (e.button !== 0) return;
     dragState.current = { type: edge, id: item.id, originalStart: item.start, originalEnd: item.end };
@@ -104,16 +121,18 @@ export function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEve
 
   return (
     <div className="relative flex-1 border-r border-slate-200/70 bg-white/28 last:border-r-0 print:bg-white/100" style={{ minWidth: compactMode ? 0 : 320 }}>
-      <DayHeader day={day} onCreateEvent={onCreateEvent} onDeleteDay={onDeleteDay} canDeleteDay={canDeleteDay} isCaptureMode={isCaptureMode} />
+      {showHeader ? <DayHeader day={day} onCreateEvent={onCreateEvent} onDeleteDay={onDeleteDay} canDeleteDay={canDeleteDay} isCaptureMode={isCaptureMode} /> : <div aria-hidden="true" className="h-14 border-b border-slate-200/70 bg-white/40 print:hidden" />}
       <div ref={contentRef} className={`relative ${isPanning ? "cursor-grabbing" : "cursor-default"} print:cursor-default`} onPointerDown={beginSelection} onMouseDown={onMiddleMouseDown} onContextMenu={(event) => event.preventDefault()} style={{ height: CANVAS_TOP_PADDING + (HOUR_END - HOUR_START) * HOUR_HEIGHT }}>
-        <div className="absolute inset-y-0 left-0 select-none border-r border-slate-200/60" style={{ width: GUTTER_WIDTH }}>
-          {Array.from({ length: HOUR_END - HOUR_START + 1 }).map((_, index) => {
-            const hour = HOUR_START + index;
-            return <div key={hour} className="relative select-none text-right text-xs text-slate-400" style={{ height: HOUR_HEIGHT, marginTop: index === 0 ? CANVAS_TOP_PADDING : 0 }}><span className="absolute right-2 -top-2.5 select-none px-1">{String(hour).padStart(2, "0")}:00</span></div>;
-          })}
-        </div>
+        {showHourGutter ? (
+          <div className="absolute inset-y-0 left-0 select-none border-r border-slate-200/60" style={{ width: GUTTER_WIDTH }}>
+            {Array.from({ length: HOUR_END - HOUR_START + 1 }).map((_, index) => {
+              const hour = HOUR_START + index;
+              return <div key={hour} className="relative select-none text-right text-xs text-slate-400" style={{ height: HOUR_HEIGHT, marginTop: index === 0 ? CANVAS_TOP_PADDING : 0 }}><span className="absolute right-2 -top-2.5 select-none px-1">{String(hour).padStart(2, "0")}:00</span></div>;
+            })}
+          </div>
+        ) : null}
 
-        <div className="absolute inset-y-0 right-0 overflow-hidden" style={{ left: GUTTER_WIDTH }}>
+        <div className={`absolute inset-y-0 right-0 overflow-hidden ${showHourGutter ? "left-[56px]" : "left-0"}`}>
           {Array.from({ length: HOUR_END - HOUR_START }).map((_, index) => <div key={index} className="absolute inset-x-0 border-t border-slate-200/90" style={{ top: CANVAS_TOP_PADDING + index * HOUR_HEIGHT }} />)}
 
           {selectionPreview ? <><div className="pointer-events-none absolute left-3 right-3 rounded-lg border-2 border-dashed border-sky-500 bg-sky-300/35 shadow-[0_0_0_1px_rgba(255,255,255,0.35)] print:hidden" style={{ top: selectionPreview.top, height: selectionPreview.height }} /><div className="pointer-events-none absolute left-5 rounded-full bg-sky-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-lg print:hidden" style={{ top: Math.max(6, selectionPreview.top + 6) }}>{minutesToTime(selectionPreview.startMinutes)} - {minutesToTime(selectionPreview.endMinutes)}</div></> : null}
@@ -124,10 +143,10 @@ export function DayColumn({ day, events, onCreateEvent, onOpenEvent, onUpdateEve
             const palette = PALETTES[item.colorIndex % PALETTES.length];
             const Icon = getIconComponent(item.icon);
             return (
-              <div key={item.id} data-event-card="true" className={`group absolute left-3 right-3 cursor-pointer select-none rounded-lg border ${palette.accent} ${palette.card} text-white shadow-lg ring-1 ring-white/20 transition hover:scale-[1.01] print:hover:scale-100 ${item.end - item.start < 31 ? "px-3 py-1.5" : "px-3 py-2.5"}`} style={{ top, height }} onDoubleClick={() => onOpenEvent(item)} onPointerDown={(e) => startDragMove(e, item)} onMouseDown={onMiddleMouseDown}>
+              <div key={item.id} data-event-card="true" className={`group absolute left-3 right-3 cursor-pointer select-none rounded-lg border ${palette.accent} ${palette.card} text-white shadow-lg ring-1 ring-white/20 transition hover:scale-[1.01] print:hover:scale-100 ${item.end - item.start < 31 ? "px-3 py-1.5" : "px-3 py-2.5"}`} style={{ top, height }} onDoubleClick={() => onOpenEvent(item)} onPointerDown={enableEventDrag ? (e) => startDragMove(e, item) : undefined} onMouseDown={onMiddleMouseDown}>
                 <button className="absolute inset-0 rounded-lg select-none" onClick={(e) => { e.stopPropagation(); onOpenEvent(item); }} aria-label={`Abrir ${item.title}`} />
-                <div className="absolute left-4 right-4 top-0.5 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-start")} onMouseDown={onMiddleMouseDown} />
-                <div className="absolute bottom-0.5 left-4 right-4 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-end")} onMouseDown={onMiddleMouseDown} />
+                {enableEventDrag ? <div className="absolute left-4 right-4 top-0.5 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-start")} onMouseDown={onMiddleMouseDown} /> : null}
+                {enableEventDrag ? <div className="absolute bottom-0.5 left-4 right-4 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-end")} onMouseDown={onMiddleMouseDown} /> : null}
                 <div className="relative z-10 flex h-full flex-col gap-1 overflow-hidden pr-4 select-none">
                   <div className="flex items-center gap-2 text-sm font-semibold leading-tight md:text-[15px]"><Icon className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{item.title}</span>{item.price ? <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90">{item.price} EUR{item.pricePerPerson ? <User className="h-3 w-3" /> : null}</span> : null}</div>
                   <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/85"><span>{minutesToTime(item.start)} - {minutesToTime(item.end)}</span></div>
