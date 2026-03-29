@@ -67,14 +67,14 @@ export function AddDaysModal({ existingDayKeys, initialMonthKey, onClose, onAcce
                 <button key={meta.key} onClick={() => toggleDay(date)} disabled={isExisting} className={`h-full rounded-xl border text-left transition ${isExisting ? "cursor-not-allowed border-green-200 bg-green-100 text-slate-400" : isSelected ? "border-sky-600 bg-sky-600 text-white shadow-lg shadow-sky-200" : "border-slate-200 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50"}`}>
                   <div className="flex h-full flex-col justify-between p-2">
                     <span className="text-sm font-semibold">{date.getDate()}</span>
-                    <span className="text-[10px] uppercase tracking-[0.18em] opacity-80">{isExisting ? "Añadido" : "Añadir"}</span>
+                    <span className="hidden text-[10px] uppercase tracking-[0.18em] opacity-80 sm:inline">{isExisting ? "Añadido" : "Añadir"}</span>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">{selectedKeys.length === 0 ? "No hay días seleccionados." : `${selectedKeys.length} día(s) listos para Añadir.`}</div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">{selectedKeys.length === 0 ? "No hay días seleccionados." : `${selectedKeys.length} día(s) listos para añadir.`}</div>
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-slate-200 px-4 py-3">
