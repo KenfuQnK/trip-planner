@@ -96,7 +96,7 @@ export function EventModal({ event, onClose, onSave, onDelete }) {
 
             <div className="grid grid-cols-[1fr_auto] items-end gap-2">
               <label className="block">
-                <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">EUR Precio</span>
+                <span className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-700">€ Precio</span>
                 <input type="number" min="0" step="0.01" value={draft.price ?? ""} onChange={(e) => setDraft({ ...draft, price: e.target.value })} className="w-full rounded-2xl border border-slate-200 px-3 py-2.5 outline-none transition focus:border-slate-400" placeholder="Ej. 18.50" />
               </label>
               <label className="flex h-[42px] items-center gap-2 rounded-2xl border border-slate-200 px-3 text-sm text-slate-700 whitespace-nowrap">

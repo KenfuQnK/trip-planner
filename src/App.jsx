@@ -24,7 +24,11 @@ import { loadStoredPlanner, saveToStorage } from "./utils/storage.js";
 
 runSelfChecks();
 
-const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
+// Ajusta este valor para decidir antes o despues cuando la app entra en layout movil.
+const MOBILE_BREAKPOINT_PX = 1020;
+const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_BREAKPOINT_PX}px)`;
+const MOBILE_DAY_MIN_WIDTH = 150;
+const MOBILE_DAY_MAX_WIDTH = 240;
 
 function App() {
   const initialState = useMemo(() => loadStoredPlanner(), []);
@@ -133,7 +137,7 @@ function App() {
 
   const compactMode = days.length <= COMPACT_DAY_LIMIT;
   const gridMinWidth = compactMode ? 0 : days.length * DAY_MIN_WIDTH;
-  const mobileGridMinWidth = days.length * 220;
+  const mobileGridMinWidth = days.length * MOBILE_DAY_MIN_WIDTH;
 
   const handleMiddleMouseDown = (event) => {
     if (event.button !== 1 || !scrollRef.current) return;
@@ -250,7 +254,7 @@ function App() {
           <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} flex-1 overflow-auto print:overflow-visible`}>
             <div className="flex min-h-full min-w-max items-start print:min-w-0">
               <MobileHoursColumn onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} />
-              <div className="grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(220px, 1fr))`, minWidth: mobileGridMinWidth }}>
+              <div className="grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(${MOBILE_DAY_MIN_WIDTH}px, ${MOBILE_DAY_MAX_WIDTH}px))`, minWidth: mobileGridMinWidth }}>
                 {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={true} isCaptureMode={isCaptureMode} showHeader={true} showHourGutter={false} enableEventDrag={false} />)}
               </div>
             </div>

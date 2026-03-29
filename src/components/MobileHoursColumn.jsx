@@ -38,8 +38,8 @@ export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPr
   };
 
   return (
-    <div className="export-include relative z-40 w-14 shrink-0 border-r border-slate-200/70 bg-white/65 backdrop-blur print:hidden">
-      <div ref={menuRef} className="relative z-40 flex h-16 items-center justify-center border-b border-slate-200/70">
+    <div className="export-include sticky left-0 z-40 w-14 shrink-0 self-start border-r border-slate-200/70 bg-white/65 backdrop-blur print:hidden">
+      <div ref={menuRef} className="sticky top-0 z-50 flex h-16 items-center justify-center border-b border-slate-200/70 bg-white/95 backdrop-blur">
         <button onClick={() => setIsMenuOpen((prev) => !prev)} aria-label="Abrir menú" className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
           <Menu className="h-4 w-4" />
         </button>
