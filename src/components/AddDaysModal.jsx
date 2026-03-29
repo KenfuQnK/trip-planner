@@ -8,7 +8,10 @@ import {
 import { addMonths, formatDayMeta, parseIsoDate, startOfDay } from "../utils/date-utils.js";
 
 export function AddDaysModal({ existingDayKeys, initialMonthKey, onClose, onAccept }) {
-  const [visibleMonth, setVisibleMonth] = useState(() => startOfDay(initialMonthKey ? parseIsoDate(initialMonthKey) : new Date()));
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const parsed = initialMonthKey ? parseIsoDate(initialMonthKey) : null;
+    return startOfDay(parsed ?? new Date());
+  });
   const [selectedKeys, setSelectedKeys] = useState([]);
 
   const monthLabel = new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" }).format(visibleMonth);

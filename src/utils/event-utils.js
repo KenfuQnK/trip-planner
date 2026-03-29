@@ -20,20 +20,30 @@ export function buildEvent(day, start, end) {
 
 export function normalizeImportedEvents(input, days = DEFAULT_DAYS) {
   if (!Array.isArray(input)) throw new Error("Formato invalido");
+  const dayList = Array.isArray(days) && days.length > 0 ? days : DEFAULT_DAYS;
+  const fallbackDayKey = dayList[0]?.key ?? DEFAULT_DAYS[0].key;
+
   return input
-    .map((item, index) => ({
-      id: typeof item.id === "string" && item.id ? item.id : `imported-${index}-${crypto.randomUUID()}`,
-      day: days.some((d) => d.key === item.day) ? item.day : days[0].key,
-      title: typeof item.title === "string" ? item.title : "Nuevo plan",
-      notes: typeof item.notes === "string" ? item.notes : "",
-      link: typeof item.link === "string" ? item.link : "",
-      price: item.price == null ? "" : String(item.price),
-      pricePerPerson: Boolean(item.pricePerPerson),
-      icon: ICONS.some((i) => i.key === item.icon) ? item.icon : "train",
-      colorIndex: Number.isFinite(item.colorIndex) ? clamp(Number(item.colorIndex), 0, PALETTES.length - 1) : 0,
-      start: clamp(Number(item.start) || 0, HOUR_START * 60, HOUR_END * 60),
-      end: clamp(Number(item.end) || MIN_EVENT_MINUTES, HOUR_START * 60, HOUR_END * 60),
-    }))
+    .map((item, index) => {
+      if (!item || typeof item !== "object") return null;
+
+      const nextDay = typeof item.day === "string" && dayList.some((d) => d?.key === item.day) ? item.day : fallbackDayKey;
+
+      return {
+        id: typeof item.id === "string" && item.id ? item.id : `imported-${index}-${crypto.randomUUID()}`,
+        day: nextDay,
+        title: typeof item.title === "string" ? item.title : "Nuevo plan",
+        notes: typeof item.notes === "string" ? item.notes : "",
+        link: typeof item.link === "string" ? item.link : "",
+        price: item.price == null ? "" : String(item.price),
+        pricePerPerson: Boolean(item.pricePerPerson),
+        icon: ICONS.some((i) => i.key === item.icon) ? item.icon : "train",
+        colorIndex: Number.isFinite(item.colorIndex) ? clamp(Number(item.colorIndex), 0, PALETTES.length - 1) : 0,
+        start: clamp(Number(item.start) || 0, HOUR_START * 60, HOUR_END * 60),
+        end: clamp(Number(item.end) || MIN_EVENT_MINUTES, HOUR_START * 60, HOUR_END * 60),
+      };
+    })
+    .filter(Boolean)
     .map((item) => ({
       ...item,
       end: Math.max(item.start + MIN_EVENT_MINUTES, item.end),
