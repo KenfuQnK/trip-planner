@@ -15,7 +15,7 @@ import {
   HOUR_START,
 } from "../utils/constants.js";
 
-export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPrint, onAddDays, isBusy }) {
+export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPrint, onAddDays, isBusy, syncStatus }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -50,6 +50,7 @@ export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPr
             <button onClick={() => handleAction(onExport)} title="Exportar" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Upload className="h-5 w-5" /></button>
             <button onClick={() => handleAction(onPrint)} title="Imprimir" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Printer className="h-5 w-5" /></button>
             <button onClick={() => handleAction(onExportImage)} title="Guardar PNG" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><ImageIconLucide className="h-5 w-5" /></button>
+            <span className="max-w-[120px] rounded-xl bg-slate-100 px-2 py-1 text-center text-[10px] font-medium leading-tight text-slate-700">{syncStatus}</span>
           </div>
         ) : null}
       </div>

@@ -20,7 +20,16 @@ import {
   tryDownloadBlob,
   tryOpenFilePicker,
 } from "./utils/index.js";
-import { loadStoredPlanner, saveToStorage } from "./utils/storage.js";
+import {
+  addDay,
+  bootstrapPlanner,
+  loadStoredPlanner,
+  replacePlannerData,
+  softDeleteDayAndEvents,
+  softDeleteEvent,
+  subscribePlanner,
+  upsertEvent,
+} from "./utils/storage.js";
 
 runSelfChecks();
 
@@ -40,14 +49,38 @@ function App() {
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [fallbackData, setFallbackData] = useState(null);
   const [isAddDaysOpen, setIsAddDaysOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("guardado localmente");
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.matchMedia(MOBILE_MEDIA_QUERY).matches : false));
   const scrollRef = useRef(null);
   const panState = useRef(null);
   const importInputRef = useRef(null);
 
   useEffect(() => {
-    saveToStorage(days, events);
-  }, [days, events]);
+    let isMounted = true;
+    const localData = loadStoredPlanner();
+    setDays(localData.days);
+    setEvents(localData.events);
+
+    bootstrapPlanner().catch(() => {});
+
+    const unsubscribe = subscribePlanner(
+      (data) => {
+        if (!isMounted) return;
+        setDays(data.days);
+        setEvents(data.events);
+      },
+      (nextStatus) => {
+        if (!isMounted) return;
+        setSyncStatus(nextStatus);
+      },
+      () => {},
+    );
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const handlePanMove = useCallback((event) => {
     if (!panState.current || !scrollRef.current) return;
@@ -91,43 +124,72 @@ function App() {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  const createEvent = (event, openAfterCreate = false) => {
-    setEvents((prev) => [...prev, event]);
-    if (openAfterCreate) setEditingEvent(event);
+  const createEvent = async (event, openAfterCreate = false) => {
+    try {
+      await upsertEvent(event);
+      if (openAfterCreate) setEditingEvent(event);
+    } catch {
+      alert("No se ha podido guardar el evento.");
+    }
   };
 
-  const updateEvent = (id, updates) => {
-    setEvents((prev) => prev.map((event) => (event.id === id ? { ...event, ...updates } : event)));
-    setEditingEvent((prev) => (prev && prev.id === id ? { ...prev, ...updates } : prev));
+  const updateEvent = async (id, updates) => {
+    const source = events.find((event) => event.id === id);
+    if (!source) return;
+    const nextEvent = { ...source, ...updates };
+    try {
+      await upsertEvent(nextEvent);
+      setEditingEvent((prev) => (prev && prev.id === id ? { ...prev, ...updates } : prev));
+    } catch {
+      alert("No se ha podido actualizar el evento.");
+    }
   };
 
-  const saveEvent = (updatedEvent) => {
-    setEvents((prev) => prev.map((event) => (event.id === updatedEvent.id ? updatedEvent : event)));
-    setEditingEvent(null);
+  const saveEvent = async (updatedEvent) => {
+    try {
+      await upsertEvent(updatedEvent);
+      setEditingEvent(null);
+    } catch {
+      alert("No se ha podido guardar el evento.");
+    }
   };
 
-  const deleteEvent = (id) => {
-    setEvents((prev) => prev.filter((event) => event.id !== id));
-    setEditingEvent((prev) => (prev?.id === id ? null : prev));
+  const deleteEvent = async (id) => {
+    try {
+      await softDeleteEvent(id);
+      setEditingEvent((prev) => (prev?.id === id ? null : prev));
+    } catch {
+      alert("No se ha podido eliminar el evento.");
+    }
   };
 
-  const addDays = (dayKeys) => {
+  const addDays = async (dayKeys) => {
     if (!Array.isArray(dayKeys) || dayKeys.length === 0) {
       setIsAddDaysOpen(false);
       return;
     }
-    setDays((prev) => normalizeImportedDays([...prev, ...dayKeys]));
-    setIsAddDaysOpen(false);
+    const nextDays = normalizeImportedDays([...days, ...dayKeys]);
+    const missingDays = nextDays.filter((day) => !days.some((current) => current.key === day.key));
+    try {
+      await Promise.all(missingDays.map((day) => addDay(day)));
+      setIsAddDaysOpen(false);
+    } catch {
+      alert("No se han podido añadir los días.");
+    }
   };
 
-  const deleteDay = (day) => {
+  const deleteDay = async (day) => {
     if (days.length <= 1) return;
     const relatedEvents = events.filter((event) => event.day === day.key).length;
     const confirmed = window.confirm(`Eliminar ${day.label} ${day.dateLabel} y sus ${relatedEvents} evento(s)?`);
     if (!confirmed) return;
-    setDays((prev) => prev.filter((item) => item.key !== day.key));
-    setEvents((prev) => prev.filter((event) => event.day !== day.key));
-    setEditingEvent((prev) => (prev?.day === day.key ? null : prev));
+    try {
+      const eventIds = events.filter((event) => event.day === day.key).map((event) => event.id);
+      await softDeleteDayAndEvents(day.key, eventIds);
+      setEditingEvent((prev) => (prev?.day === day.key ? null : prev));
+    } catch {
+      alert("No se ha podido eliminar el día.");
+    }
   };
 
   const groupedEvents = useMemo(() => days.reduce((acc, day) => {
@@ -161,13 +223,12 @@ function App() {
     if (!opened) setFallbackData({ type: "import-json", title: "Importar JSON", description: "Este entorno ha bloqueado el selector de archivos. Pega aqui el JSON exportado para reemplazar todos los días y eventos actuales.", content: "" });
   };
 
-  const applyImportedJson = (text) => {
+  const applyImportedJson = async (text) => {
     try {
       const parsed = JSON.parse(text);
       const nextDays = normalizeImportedDays(Array.isArray(parsed) ? DEFAULT_DAYS : parsed?.days ?? DEFAULT_DAYS);
       const nextEvents = normalizeImportedEvents(Array.isArray(parsed) ? parsed : parsed?.events, nextDays);
-      setDays(nextDays);
-      setEvents(nextEvents);
+      await replacePlannerData(nextDays, nextEvents);
       setEditingEvent(null);
       setFallbackData(null);
       setIsAddDaysOpen(false);
@@ -181,7 +242,7 @@ function App() {
     if (!file) return;
     try {
       const text = await file.text();
-      applyImportedJson(text);
+      await applyImportedJson(text);
     } catch {
       alert("No se ha podido importar el JSON.");
     } finally {
@@ -253,7 +314,7 @@ function App() {
         <div className="flex h-full print:block">
           <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} flex-1 overflow-auto print:overflow-visible`}>
             <div className="flex min-h-full min-w-max items-start print:min-w-0">
-              <MobileHoursColumn onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} />
+              <MobileHoursColumn onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} syncStatus={syncStatus} />
               <div className="grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(${MOBILE_DAY_MIN_WIDTH}px, ${MOBILE_DAY_MAX_WIDTH}px))`, minWidth: mobileGridMinWidth }}>
                 {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={true} isCaptureMode={isCaptureMode} showHeader={true} showHourGutter={false} enableEventDrag={false} />)}
               </div>
@@ -262,7 +323,7 @@ function App() {
         </div>
       ) : (
         <div className="flex h-full print:block">
-          <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} />
+          <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} syncStatus={syncStatus} />
           <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} min-h-0 flex-1 overflow-auto print:overflow-visible`}>
             <div className="grid print:min-w-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`, minWidth: gridMinWidth || undefined }}>
               {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={compactMode} isCaptureMode={isCaptureMode} enableEventDrag={true} />)}
