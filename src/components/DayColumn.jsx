@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { DayHeader } from "./DayHeader.jsx";
 import {
@@ -12,6 +12,62 @@ import {
 } from "../utils/constants.js";
 import { clamp, getIconComponent, minutesToTime, minutesToY, yToMinutes } from "../utils/index.js";
 import { buildEvent } from "../utils/event-utils.js";
+
+const computeEventLayout = (events) => {
+  const layout = {};
+  if (!events.length) return layout;
+  const sortedEvents = [...events].sort((a, b) => a.start - b.start);
+
+  let clusterEvents = [];
+  let clusterMaxEnd = 0;
+
+  const flushCluster = () => {
+    if (!clusterEvents.length) return;
+    const columns = [];
+    for (const event of clusterEvents) {
+      let assignedColumn = false;
+      for (let columnIndex = 0; columnIndex < columns.length; columnIndex += 1) {
+        const column = columns[columnIndex];
+        const lastEvent = column[column.length - 1];
+        if (lastEvent.end <= event.start) {
+          column.push(event);
+          assignedColumn = true;
+          break;
+        }
+      }
+      if (!assignedColumn) {
+        columns.push([event]);
+      }
+    }
+    const totalColumns = columns.length || 1;
+    columns.forEach((column, columnIndex) => {
+      column.forEach((event) => {
+        layout[event.id] = { columnIndex, totalColumns };
+      });
+    });
+    clusterEvents = [];
+    clusterMaxEnd = 0;
+  };
+
+  for (const event of sortedEvents) {
+    if (!clusterEvents.length) {
+      clusterEvents.push(event);
+      clusterMaxEnd = event.end;
+      continue;
+    }
+    if (event.start >= clusterMaxEnd) {
+      flushCluster();
+      clusterEvents.push(event);
+      clusterMaxEnd = event.end;
+      continue;
+    }
+    clusterEvents.push(event);
+    clusterMaxEnd = Math.max(clusterMaxEnd, event.end);
+  }
+
+  flushCluster();
+  return layout;
+};
 
 export function DayColumn({
   day,
@@ -33,6 +89,7 @@ export function DayColumn({
   const dragState = useRef(null);
   const selectionState = useRef(null);
   const [selectionPreview, setSelectionPreview] = useState(null);
+  const eventLayouts = useMemo(() => computeEventLayout(events), [events]);
 
   const getPointerContentY = (clientY) => {
     if (!contentRef.current) return 0;
@@ -142,8 +199,26 @@ export function DayColumn({
             const height = ((item.end - item.start) / 60) * HOUR_HEIGHT;
             const palette = PALETTES[item.colorIndex % PALETTES.length];
             const Icon = getIconComponent(item.icon);
+            const layout = eventLayouts[item.id] ?? { columnIndex: 0, totalColumns: 1 };
+            const columns = Math.max(layout.totalColumns, 1);
+            const columnIndex = Math.min(Math.max(layout.columnIndex, 0), columns - 1);
+            const leftPercent = (columnIndex * 100) / columns;
+            const widthPercent = 100 / columns;
             return (
-              <div key={item.id} data-event-card="true" className={`group absolute left-3 right-3 cursor-pointer select-none rounded-lg border ${palette.accent} ${palette.card} text-white shadow-lg ring-1 ring-white/20 transition hover:scale-[1.01] print:hover:scale-100 ${item.end - item.start < 31 ? "px-3 py-1.5" : "px-3 py-2.5"}`} style={{ top, height }} onDoubleClick={() => onOpenEvent(item)} onPointerDown={enableEventDrag ? (e) => startDragMove(e, item) : undefined} onMouseDown={onMiddleMouseDown}>
+              <div
+                key={item.id}
+                data-event-card="true"
+                className={`group absolute cursor-pointer select-none rounded-lg border ${palette.accent} ${palette.card} text-white shadow-lg ring-1 ring-white/20 transition hover:scale-[1.01] print:hover:scale-100 ${item.end - item.start < 31 ? "px-3 py-1.5" : "px-3 py-2.5"}`}
+                style={{
+                  top,
+                  height,
+                  left: `calc(${leftPercent}% + 3px)`,
+                  width: `calc(${widthPercent}% - 6px)`,
+                }}
+                onDoubleClick={() => onOpenEvent(item)}
+                onPointerDown={enableEventDrag ? (e) => startDragMove(e, item) : undefined}
+                onMouseDown={onMiddleMouseDown}
+              >
                 <button className="absolute inset-0 rounded-lg select-none" onClick={(e) => { e.stopPropagation(); onOpenEvent(item); }} aria-label={`Abrir ${item.title}`} />
                 {enableEventDrag ? <div className="absolute left-4 right-4 top-0.5 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-start")} onMouseDown={onMiddleMouseDown} /> : null}
                 {enableEventDrag ? <div className="absolute bottom-0.5 left-4 right-4 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-end")} onMouseDown={onMiddleMouseDown} /> : null}
