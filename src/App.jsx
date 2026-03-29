@@ -23,7 +23,7 @@ import {
 import {
   addDay,
   bootstrapPlanner,
-  loadStoredPlanner,
+  loadInitialPlanner,
   replacePlannerData,
   softDeleteDayAndEvents,
   softDeleteEvent,
@@ -40,7 +40,7 @@ const MOBILE_DAY_MIN_WIDTH = 150;
 const MOBILE_DAY_MAX_WIDTH = 240;
 
 function App() {
-  const initialState = useMemo(() => loadStoredPlanner(), []);
+  const initialState = useMemo(() => loadInitialPlanner(), []);
   const [days, setDays] = useState(initialState.days);
   const [events, setEvents] = useState(initialState.events);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -57,9 +57,6 @@ function App() {
 
   useEffect(() => {
     let isMounted = true;
-    const localData = loadStoredPlanner();
-    setDays(localData.days);
-    setEvents(localData.events);
 
     bootstrapPlanner().catch(() => {});
 

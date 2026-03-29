@@ -22,6 +22,7 @@ import {
 
 const DAYS_COLLECTION = "plannerDays";
 const EVENTS_COLLECTION = "plannerEvents";
+const LEGACY_SEED_ENABLED = import.meta.env.VITE_FIREBASE_ENABLE_LEGACY_SEED === "true";
 
 function normalizeLegacyData(rawData) {
   if (!rawData) return { days: DEFAULT_DAYS, events: sampleEvents };
@@ -39,6 +40,17 @@ export function loadStoredPlanner() {
   } catch {
     return { days: DEFAULT_DAYS, events: sampleEvents };
   }
+}
+
+export function loadInitialPlanner() {
+  if (isFirebaseReady && db) {
+    return {
+      days: DEFAULT_DAYS,
+      events: [],
+    };
+  }
+
+  return loadStoredPlanner();
 }
 
 export function saveToStorage(days, events) {
@@ -154,7 +166,7 @@ async function seedPlannerIfNeeded(data) {
 
 export async function bootstrapPlanner() {
   const localData = loadStoredPlanner();
-  if (isFirebaseReady && db) {
+  if (LEGACY_SEED_ENABLED && isFirebaseReady && db) {
     await seedPlannerIfNeeded(localData);
   }
   return localData;
