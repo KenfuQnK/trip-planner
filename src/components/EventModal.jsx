@@ -17,7 +17,7 @@ import { minutesToTime } from "../utils/index.js";
 import { normalizeEventTiming } from "../utils/event-utils.js";
 import { EventTemplateModal } from "./EventTemplateModal.jsx";
 
-export function EventModal({ event, onClose, onSave, onDelete }) {
+export function EventModal({ event, colorLabels, onClose, onSave, onDelete }) {
   const [draft, setDraft] = useState(event);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
@@ -226,7 +226,19 @@ export function EventModal({ event, onClose, onSave, onDelete }) {
               <div>
                 <p className="mb-2 text-sm font-medium text-slate-700">Color</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {PALETTES.map((palette, index) => <button key={index} onClick={() => updateDraft({ colorIndex: index })} className={`cursor-pointer h-12 rounded-2xl border-2 transition ${palette.card} ${draft.colorIndex === index ? "scale-95 border-slate-950" : "border-white"}`} />)}
+                  {PALETTES.map((palette, index) => (
+                    <button
+                      key={index}
+                      onClick={() => updateDraft({ colorIndex: index })}
+                      className={`relative cursor-pointer h-12 overflow-hidden rounded-2xl border-2 transition ${palette.card} ${draft.colorIndex === index ? "scale-95 border-slate-950" : "border-white"}`}
+                    >
+                      {colorLabels?.[index] ? (
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] font-semibold tracking-wide text-white/55">
+                          {colorLabels[index]}
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
                 </div>
               </div>
 

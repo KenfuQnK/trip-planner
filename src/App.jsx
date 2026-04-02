@@ -3,6 +3,7 @@ import { toPng } from "html-to-image";
 import "./App.css";
 
 import { AddDaysModal } from "./components/AddDaysModal.jsx";
+import { ConfigModal } from "./components/ConfigModal.jsx";
 import { DayColumn } from "./components/DayColumn.jsx";
 import { EventModal } from "./components/EventModal.jsx";
 import { FallbackPanel } from "./components/FallbackPanel.jsx";
@@ -14,6 +15,7 @@ import {
   DEFAULT_DAYS,
   STORAGE_VERSION,
 } from "./utils/constants.js";
+import { loadStoredColorLabels, normalizeColorLabels, saveColorLabels } from "./utils/color-labels.js";
 import { normalizeImportedDays } from "./utils/date-utils.js";
 import { normalizeEventTiming, normalizeImportedEvents, runSelfChecks } from "./utils/event-utils.js";
 import {
@@ -53,8 +55,10 @@ function App() {
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [fallbackData, setFallbackData] = useState(null);
   const [isAddDaysOpen, setIsAddDaysOpen] = useState(false);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState("guardado localmente");
   const [contentView, setContentView] = useState(CONTENT_VIEWS.COLUMNS);
+  const [colorLabels, setColorLabels] = useState(() => loadStoredColorLabels());
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.matchMedia(MOBILE_MEDIA_QUERY).matches : false));
   const scrollRef = useRef(null);
   const panState = useRef(null);
@@ -125,6 +129,10 @@ function App() {
 
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
+
+  useEffect(() => {
+    saveColorLabels(colorLabels);
+  }, [colorLabels]);
 
   const createEvent = async (event, openAfterCreate = false) => {
     try {
@@ -218,7 +226,15 @@ function App() {
   };
 
   const handleExport = () => {
-    const payload = { version: STORAGE_VERSION, exportedAt: new Date().toISOString(), days, events };
+    const payload = {
+      version: STORAGE_VERSION,
+      exportedAt: new Date().toISOString(),
+      days,
+      events,
+      settings: {
+        colorLabels: normalizeColorLabels(colorLabels),
+      },
+    };
     const content = JSON.stringify(payload, null, 2);
     const blob = new Blob([content], { type: "application/json" });
     const ok = tryDownloadBlob(blob, "trip-planner-events.json");
@@ -235,10 +251,12 @@ function App() {
       const parsed = JSON.parse(text);
       const nextDays = normalizeImportedDays(Array.isArray(parsed) ? DEFAULT_DAYS : parsed?.days ?? DEFAULT_DAYS);
       const nextEvents = normalizeImportedEvents(Array.isArray(parsed) ? parsed : parsed?.events, nextDays);
+      setColorLabels(normalizeColorLabels(Array.isArray(parsed) ? [] : parsed?.settings?.colorLabels));
       await replacePlannerData(nextDays, nextEvents);
       setEditingEvent(null);
       setFallbackData(null);
       setIsAddDaysOpen(false);
+      setIsConfigOpen(false);
     } catch {
       alert("No se ha podido importar el JSON.");
     }
@@ -334,7 +352,7 @@ function App() {
         </div>
       ) : (
         <div className="flex h-full print:block">
-          <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} onOpenPacker={handleOpenPacker} onToggleView={handleToggleView} isMapView={isMapView} isBusy={isExportingImage} syncStatus={syncStatus} />
+          <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} onOpenPacker={handleOpenPacker} onOpenConfig={() => setIsConfigOpen(true)} onToggleView={handleToggleView} isMapView={isMapView} isBusy={isExportingImage} syncStatus={syncStatus} />
           <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} min-h-0 flex-1 overflow-auto print:overflow-visible`}>
             {isMapView ? (
               <div className="flex min-h-full items-center justify-center p-8">
@@ -351,8 +369,9 @@ function App() {
         </div>
       )}
 
-      {editingEvent ? <EventModal event={editingEvent} onClose={() => setEditingEvent(null)} onSave={saveEvent} onDelete={deleteEvent} /> : null}
+      {editingEvent ? <EventModal event={editingEvent} colorLabels={colorLabels} onClose={() => setEditingEvent(null)} onSave={saveEvent} onDelete={deleteEvent} /> : null}
       {isAddDaysOpen ? <AddDaysModal existingDayKeys={days.map((day) => day.key)} initialMonthKey={days[0]?.key} onClose={() => setIsAddDaysOpen(false)} onAccept={addDays} /> : null}
+      {isConfigOpen ? <ConfigModal colorLabels={colorLabels} onClose={() => setIsConfigOpen(false)} onChangeColorLabel={(index, value) => setColorLabels((current) => current.map((label, labelIndex) => (labelIndex === index ? value : label)))} /> : null}
       <FallbackPanel key={fallbackData?.type ?? "fallback-none"} fallbackData={fallbackData} onClose={() => setFallbackData(null)} onImportText={applyImportedJson} />
     </div>
   );

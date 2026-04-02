@@ -7,6 +7,7 @@ import {
   Map,
   Plus,
   Printer,
+  Settings,
   Upload,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ export function SideMenu({
   onPrint,
   onAddDays,
   onOpenPacker,
+  onOpenConfig,
   onToggleView,
   isMapView,
   isBusy,
@@ -33,7 +35,12 @@ export function SideMenu({
       <button onClick={onExport} title="Exportar" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Upload className="h-5 w-5" /></button>
       <button onClick={onPrint} title="Imprimir" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Printer className="h-5 w-5" /></button>
       <button onClick={onExportImage} title="Guardar PNG" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><ImageIconLucide className="h-5 w-5" /></button>
-      <span className="mt-auto rounded-full bg-white/15 px-2 py-1 text-center text-[10px] font-medium leading-tight text-white">{syncStatus}</span>
+      <div className="mt-auto flex flex-col items-center gap-4">
+        <button onClick={onOpenConfig} title="Configuracion" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white transition hover:scale-105 hover:bg-white/20 disabled:opacity-50" disabled={isBusy}>
+          <Settings className="h-5 w-5" />
+        </button>
+        <span className="rounded-full bg-white/15 px-2 py-1 text-center text-[10px] font-medium leading-tight text-white">{syncStatus}</span>
+      </div>
     </div>
   );
 }
