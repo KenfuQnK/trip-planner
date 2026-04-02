@@ -15,7 +15,7 @@ import {
   STORAGE_VERSION,
 } from "./utils/constants.js";
 import { normalizeImportedDays } from "./utils/date-utils.js";
-import { normalizeImportedEvents, runSelfChecks } from "./utils/event-utils.js";
+import { normalizeEventTiming, normalizeImportedEvents, runSelfChecks } from "./utils/event-utils.js";
 import {
   tryDownloadBlob,
   tryOpenFilePicker,
@@ -38,6 +38,10 @@ const MOBILE_BREAKPOINT_PX = 1020;
 const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_BREAKPOINT_PX}px)`;
 const MOBILE_DAY_MIN_WIDTH = 150;
 const MOBILE_DAY_MAX_WIDTH = 240;
+const CONTENT_VIEWS = {
+  COLUMNS: "columns",
+  MAP: "map",
+};
 
 function App() {
   const initialState = useMemo(() => loadInitialPlanner(), []);
@@ -50,6 +54,7 @@ function App() {
   const [fallbackData, setFallbackData] = useState(null);
   const [isAddDaysOpen, setIsAddDaysOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState("guardado localmente");
+  const [contentView, setContentView] = useState(CONTENT_VIEWS.COLUMNS);
   const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.matchMedia(MOBILE_MEDIA_QUERY).matches : false));
   const scrollRef = useRef(null);
   const panState = useRef(null);
@@ -133,10 +138,10 @@ function App() {
   const updateEvent = async (id, updates) => {
     const source = events.find((event) => event.id === id);
     if (!source) return;
-    const nextEvent = { ...source, ...updates };
+    const nextEvent = { ...source, ...updates, ...normalizeEventTiming({ ...source, ...updates }) };
     try {
       await upsertEvent(nextEvent);
-      setEditingEvent((prev) => (prev && prev.id === id ? { ...prev, ...updates } : prev));
+      setEditingEvent((prev) => (prev && prev.id === id ? nextEvent : prev));
     } catch {
       alert("No se ha podido actualizar el evento.");
     }
@@ -144,7 +149,7 @@ function App() {
 
   const saveEvent = async (updatedEvent) => {
     try {
-      await upsertEvent(updatedEvent);
+      await upsertEvent({ ...updatedEvent, ...normalizeEventTiming(updatedEvent) });
       setEditingEvent(null);
     } catch {
       alert("No se ha podido guardar el evento.");
@@ -197,6 +202,7 @@ function App() {
   const compactMode = days.length <= COMPACT_DAY_LIMIT;
   const gridMinWidth = compactMode ? 0 : days.length * DAY_MIN_WIDTH;
   const mobileGridMinWidth = days.length * MOBILE_DAY_MIN_WIDTH;
+  const isMapView = contentView === CONTENT_VIEWS.MAP;
 
   const handleMiddleMouseDown = (event) => {
     if (event.button !== 1 || !scrollRef.current) return;
@@ -205,6 +211,10 @@ function App() {
     setIsPanning(true);
     window.addEventListener("mousemove", handlePanMove);
     window.addEventListener("mouseup", stopPan);
+  };
+
+  const handleToggleView = () => {
+    setContentView((currentView) => (currentView === CONTENT_VIEWS.COLUMNS ? CONTENT_VIEWS.MAP : CONTENT_VIEWS.COLUMNS));
   };
 
   const handleExport = () => {
@@ -254,6 +264,10 @@ function App() {
       setFallbackData({ type: "print-help", title: "Imprimir planning", description: "La impresion nativa no esta disponible aqui. Usa el navegador fuera del entorno embebido o el atajo de imprimir del sistema.", content: "" });
     }
   };
+
+  const handleOpenPacker = useCallback(() => {
+    window.open("https://kenfuqnk.github.io/trip-packer/", "_blank", "noopener,noreferrer");
+  }, []);
 
   const handleExportImage = useCallback(async () => {
     if (!scrollRef.current || isExportingImage) return;
@@ -311,7 +325,7 @@ function App() {
         <div className="flex h-full print:block">
           <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} flex-1 overflow-auto print:overflow-visible`}>
             <div className="flex min-h-full min-w-max items-start print:min-w-0">
-              <MobileHoursColumn onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} syncStatus={syncStatus} />
+              <MobileHoursColumn onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} onOpenPacker={handleOpenPacker} isBusy={isExportingImage} syncStatus={syncStatus} />
               <div className="grid" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(${MOBILE_DAY_MIN_WIDTH}px, ${MOBILE_DAY_MAX_WIDTH}px))`, minWidth: mobileGridMinWidth }}>
                 {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={true} isCaptureMode={isCaptureMode} showHeader={true} showHourGutter={false} enableEventDrag={false} />)}
               </div>
@@ -320,11 +334,19 @@ function App() {
         </div>
       ) : (
         <div className="flex h-full print:block">
-          <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} isBusy={isExportingImage} syncStatus={syncStatus} />
+          <SideMenu onExportImage={handleExportImage} onExport={handleExport} onImportClick={handleImportClick} onPrint={handlePrint} onAddDays={() => setIsAddDaysOpen(true)} onOpenPacker={handleOpenPacker} onToggleView={handleToggleView} isMapView={isMapView} isBusy={isExportingImage} syncStatus={syncStatus} />
           <div ref={scrollRef} className={`${isPanning ? "cursor-grabbing" : "cursor-default"} min-h-0 flex-1 overflow-auto print:overflow-visible`}>
-            <div className="grid print:min-w-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`, minWidth: gridMinWidth || undefined }}>
-              {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={compactMode} isCaptureMode={isCaptureMode} enableEventDrag={true} />)}
-            </div>
+            {isMapView ? (
+              <div className="flex min-h-full items-center justify-center p-8">
+                <div className="flex h-full min-h-[320px] w-full rounded-[32px] border border-dashed border-slate-300 bg-white/60">
+                ...   Work in progress
+                </div>
+              </div>
+            ) : (
+              <div className="grid print:min-w-0" style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))`, minWidth: gridMinWidth || undefined }}>
+                {days.map((day) => <DayColumn key={day.key} day={day} events={groupedEvents[day.key] || []} onCreateEvent={createEvent} onOpenEvent={setEditingEvent} onUpdateEvent={updateEvent} isPanning={isPanning} onMiddleMouseDown={handleMiddleMouseDown} onDeleteDay={deleteDay} canDeleteDay={days.length > 1} compactMode={compactMode} isCaptureMode={isCaptureMode} enableEventDrag={true} />)}
+              </div>
+            )}
           </div>
         </div>
       )}

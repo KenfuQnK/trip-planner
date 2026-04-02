@@ -79,14 +79,21 @@ function mapEventSnapshot(snapshot) {
       id: data.id ?? item.id,
       day: data.day,
       title: data.title,
+      isTrip: Boolean(data.isTrip),
+      origin: data.origin,
+      destination: data.destination,
       notes: data.notes,
       link: data.link,
       price: data.price,
       pricePerPerson: Boolean(data.pricePerPerson),
+      isCritical: Boolean(data.isCritical),
       icon: data.icon,
       colorIndex: data.colorIndex,
       start: data.start,
       end: data.end,
+      hasSafetyMargin: Boolean(data.hasSafetyMargin),
+      bufferStart: data.bufferStart,
+      bufferEnd: data.bufferEnd,
     };
   });
 }

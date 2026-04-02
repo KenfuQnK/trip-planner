@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import { User } from "lucide-react";
+import { AlertTriangle, ArrowRight, User } from "lucide-react";
 import { DayHeader } from "./DayHeader.jsx";
 import {
   CANVAS_TOP_PADDING,
@@ -139,7 +139,13 @@ export function DayColumn({
     const state = dragState.current;
     if (state.type === "move") {
       const newStart = clamp(Math.round(minutes / 15) * 15, HOUR_START * 60, HOUR_END * 60 - state.duration);
-      onUpdateEvent(state.id, { start: newStart, end: newStart + state.duration });
+      const delta = newStart - state.originalStart;
+      onUpdateEvent(state.id, {
+        start: newStart,
+        end: newStart + state.duration,
+        bufferStart: state.bufferStart + delta,
+        bufferEnd: state.bufferEnd + delta,
+      });
       return;
     }
     if (state.type === "resize-start") {
@@ -162,7 +168,15 @@ export function DayColumn({
     if (!enableEventDrag) return;
     e.stopPropagation();
     if (e.button !== 0) return;
-    dragState.current = { type: "move", id: item.id, offset: getPointerContentY(e.clientY) - minutesToY(item.start), duration: item.end - item.start };
+    dragState.current = {
+      type: "move",
+      id: item.id,
+      offset: getPointerContentY(e.clientY) - minutesToY(item.start),
+      duration: item.end - item.start,
+      originalStart: item.start,
+      bufferStart: item.bufferStart ?? item.start,
+      bufferEnd: item.bufferEnd ?? item.end,
+    };
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp, { once: true });
   };
@@ -175,6 +189,13 @@ export function DayColumn({
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp, { once: true });
   };
+
+  const renderPrice = (item) => (
+    <>
+      <span>{item.price}€</span>
+      {item.pricePerPerson ? <User className="h-3 w-3" /> : null}
+    </>
+  );
 
   return (
     <div className="relative flex-1 border-r border-slate-200/70 bg-white/28 last:border-r-0 print:bg-white/100" style={{ minWidth: compactMode ? 0 : 320 }}>
@@ -197,6 +218,9 @@ export function DayColumn({
           {events.map((item) => {
             const top = minutesToY(item.start);
             const height = ((item.end - item.start) / 60) * HOUR_HEIGHT;
+            const hasSafetyMargin = Boolean(item.hasSafetyMargin) && ((item.bufferStart ?? item.start) < item.start || (item.bufferEnd ?? item.end) > item.end);
+            const marginTop = hasSafetyMargin ? minutesToY(item.bufferStart ?? item.start) : top;
+            const marginHeight = hasSafetyMargin ? (((item.bufferEnd ?? item.end) - (item.bufferStart ?? item.start)) / 60) * HOUR_HEIGHT : 0;
             const palette = PALETTES[item.colorIndex % PALETTES.length];
             const Icon = getIconComponent(item.icon);
             const layout = eventLayouts[item.id] ?? { columnIndex: 0, totalColumns: 1 };
@@ -204,29 +228,47 @@ export function DayColumn({
             const columnIndex = Math.min(Math.max(layout.columnIndex, 0), columns - 1);
             const leftPercent = (columnIndex * 100) / columns;
             const widthPercent = 100 / columns;
+            const left = `calc(${leftPercent}% + 3px)`;
+            const width = `calc(${widthPercent}% - 6px)`;
+
             return (
-              <div
-                key={item.id}
-                data-event-card="true"
-                className={`group absolute cursor-pointer select-none rounded-lg border ${palette.accent} ${palette.card} text-white shadow-lg ring-1 ring-white/20 transition hover:scale-[1.01] print:hover:scale-100 ${item.end - item.start < 31 ? "px-3 py-1.5" : "px-3 py-2.5"}`}
-                style={{
-                  top,
-                  height,
-                  left: `calc(${leftPercent}% + 3px)`,
-                  width: `calc(${widthPercent}% - 6px)`,
-                }}
-                onDoubleClick={() => onOpenEvent(item)}
-                onPointerDown={enableEventDrag ? (e) => startDragMove(e, item) : undefined}
-                onMouseDown={onMiddleMouseDown}
-              >
-                <button className="absolute inset-0 rounded-lg select-none" onClick={(e) => { e.stopPropagation(); onOpenEvent(item); }} aria-label={`Abrir ${item.title}`} />
-                {enableEventDrag ? <div className="absolute left-4 right-4 top-0.5 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-start")} onMouseDown={onMiddleMouseDown} /> : null}
-                {enableEventDrag ? <div className="absolute bottom-0.5 left-4 right-4 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-end")} onMouseDown={onMiddleMouseDown} /> : null}
-                <div className="relative z-10 flex h-full flex-col gap-1 overflow-hidden select-none">
-                  <div className="flex items-center gap-2 text-sm font-semibold leading-tight md:text-[15px]"><Icon className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{item.title}</span>{item.price ? <span className="ml-auto hidden shrink-0 items-center gap-1 text-[11px] font-semibold text-white/90 md:inline-flex">{item.price}€{item.pricePerPerson ? <User className="h-3 w-3" /> : null}</span> : null}</div>
-                  <div className="flex items-center gap-2 text-[11px] font-medium text-white/85"><span>{minutesToTime(item.start)} - {minutesToTime(item.end)}</span>{item.price ? <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-white/90 md:hidden">{item.price}€{item.pricePerPerson ? <User className="h-3 w-3" /> : null}</span> : null}</div>
-                  {height > 80 && item.notes ? <div className="line-clamp-3 select-none text-xs leading-relaxed text-white/85">{item.notes}</div> : null}
-                  {height > 110 && item.link ? <div className="truncate select-none text-xs text-white/80">{item.link}</div> : null}
+              <div key={item.id}>
+                {hasSafetyMargin ? (
+                  <div
+                    className={`pointer-events-none absolute rounded-lg border border-dashed ${palette.accent} ${palette.safety}`}
+                    style={{
+                      top: marginTop,
+                      height: marginHeight,
+                      left,
+                      width,
+                      backgroundImage: "repeating-linear-gradient(135deg, rgba(255,255,255,0.34) 0 8px, rgba(255,255,255,0.12) 8px 16px)",
+                    }}
+                  />
+                ) : null}
+                <div
+                  data-event-card="true"
+                  className={`group absolute cursor-pointer select-none rounded-lg border ${palette.accent} ${palette.card} text-white shadow-lg ring-1 ring-white/20 transition hover:scale-[1.01] print:hover:scale-100 ${item.end - item.start < 31 ? "px-3 py-1.5" : "px-3 py-2.5"}`}
+                  style={{ top, height, left, width }}
+                  onDoubleClick={() => onOpenEvent(item)}
+                  onPointerDown={enableEventDrag ? (e) => startDragMove(e, item) : undefined}
+                  onMouseDown={onMiddleMouseDown}
+                >
+                  <button className="absolute inset-0 rounded-lg select-none" onClick={(e) => { e.stopPropagation(); onOpenEvent(item); }} aria-label={`Abrir ${item.title}`} />
+                  {enableEventDrag ? <div className="absolute left-4 right-4 top-0.5 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-start")} onMouseDown={onMiddleMouseDown} /> : null}
+                  {enableEventDrag ? <div className="absolute bottom-0.5 left-4 right-4 h-1.5 cursor-ns-resize rounded-full bg-white/30 opacity-0 transition group-hover:opacity-100 print:hidden" onPointerDown={(e) => startResize(e, item, "resize-end")} onMouseDown={onMiddleMouseDown} /> : null}
+                  <div className="relative z-10 flex h-full flex-col gap-1 overflow-hidden select-none">
+                    <div className="flex items-center gap-2 text-sm font-semibold leading-tight md:text-[15px]">
+                      {item.isCritical ? <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center  text-white shadow-sm" aria-label="Elemento crítico"><AlertTriangle className="h-5 w-5" /></span> : null}
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span className="truncate">{item.title}</span>
+                      {item.price ? <span className="ml-auto hidden shrink-0 items-center gap-1 text-[11px] font-semibold text-white/90 md:inline-flex">{renderPrice(item)}</span> : null}
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] font-medium text-white/85"><span>{minutesToTime(item.start)} - {minutesToTime(item.end)}</span>{item.price ? <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-white/90 md:hidden">{renderPrice(item)}</span> : null}</div>
+                    {item.isTrip && (item.origin || item.destination) ? <div className="flex items-center gap-1 text-[11px] font-medium text-white/90"><span className="truncate">{item.origin || "Origen"}</span><ArrowRight className="h-3 w-3 shrink-0" /><span className="truncate">{item.destination || "Destino"}</span></div> : null}
+                    {hasSafetyMargin ? <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/80">Margen {minutesToTime(item.bufferStart ?? item.start)} - {minutesToTime(item.bufferEnd ?? item.end)}</div> : null}
+                    {height > 80 && item.notes ? <div className="line-clamp-3 select-none text-xs leading-relaxed text-white/85">{item.notes}</div> : null}
+                    {height > 110 && item.link ? <div className="truncate select-none text-xs text-white/80">{item.link}</div> : null}
+                  </div>
                 </div>
               </div>
             );

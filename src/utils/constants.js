@@ -26,7 +26,7 @@ export const HOUR_HEIGHT = 64;
 export const SNAP_MINUTES = 15;
 export const MIN_EVENT_MINUTES = 30;
 export const STORAGE_KEY = "trip-weekend-planner-events-v1";
-export const STORAGE_VERSION = 2;
+export const STORAGE_VERSION = 3;
 export const GUTTER_WIDTH = 56;
 export const COMPACT_DAY_LIMIT = 4;
 export const DAY_MIN_WIDTH = 320;
@@ -48,18 +48,18 @@ export const ICONS = [
 ];
 
 export const PALETTES = [
-  { card: "bg-sky-500/90", accent: "border-sky-300" },
-  { card: "bg-violet-500/90", accent: "border-violet-300" },
-  { card: "bg-emerald-500/90", accent: "border-emerald-300" },
-  { card: "bg-rose-500/90", accent: "border-rose-300" },
-  { card: "bg-amber-500/90", accent: "border-amber-300" },
-  { card: "bg-cyan-500/90", accent: "border-cyan-300" },
-  { card: "bg-fuchsia-500/90", accent: "border-fuchsia-300" },
-  { card: "bg-lime-500/90", accent: "border-lime-300" },
-  { card: "bg-orange-500/90", accent: "border-orange-300" },
-  { card: "bg-indigo-500/90", accent: "border-indigo-300" },
-  { card: "bg-teal-500/90", accent: "border-teal-300" },
-  { card: "bg-pink-500/90", accent: "border-pink-300" },
+  { card: "bg-sky-500/90", accent: "border-sky-300", safety: "bg-sky-400/28" },
+  { card: "bg-violet-500/90", accent: "border-violet-300", safety: "bg-violet-400/28" },
+  { card: "bg-emerald-500/90", accent: "border-emerald-300", safety: "bg-emerald-400/28" },
+  { card: "bg-rose-500/90", accent: "border-rose-300", safety: "bg-rose-400/28" },
+  { card: "bg-amber-500/90", accent: "border-amber-300", safety: "bg-amber-400/28" },
+  { card: "bg-cyan-500/90", accent: "border-cyan-300", safety: "bg-cyan-400/28" },
+  { card: "bg-fuchsia-500/90", accent: "border-fuchsia-300", safety: "bg-fuchsia-400/28" },
+  { card: "bg-lime-500/90", accent: "border-lime-300", safety: "bg-lime-400/28" },
+  { card: "bg-orange-500/90", accent: "border-orange-300", safety: "bg-orange-400/28" },
+  { card: "bg-indigo-500/90", accent: "border-indigo-300", safety: "bg-indigo-400/28" },
+  { card: "bg-teal-500/90", accent: "border-teal-300", safety: "bg-teal-400/28" },
+  { card: "bg-pink-500/90", accent: "border-pink-300", safety: "bg-pink-400/28" },
 ];
 
 export const sampleEvents = [
@@ -75,6 +75,9 @@ export const sampleEvents = [
     colorIndex: 0,
     start: 8 * 60 + 30,
     end: 10 * 60 + 10,
+    hasSafetyMargin: true,
+    bufferStart: 8 * 60,
+    bufferEnd: 10 * 60 + 30,
   },
   {
     id: crypto.randomUUID(),
@@ -88,6 +91,9 @@ export const sampleEvents = [
     colorIndex: 2,
     start: 17 * 60,
     end: 18 * 60 + 40,
+    hasSafetyMargin: false,
+    bufferStart: 17 * 60,
+    bufferEnd: 18 * 60 + 40,
   },
   {
     id: crypto.randomUUID(),
@@ -101,5 +107,8 @@ export const sampleEvents = [
     colorIndex: 1,
     start: 10 * 60,
     end: 12 * 60 + 30,
+    hasSafetyMargin: true,
+    bufferStart: 9 * 60 + 30,
+    bufferEnd: 13 * 60,
   },
 ];

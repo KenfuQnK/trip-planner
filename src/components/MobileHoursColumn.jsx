@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Briefcase,
   Download,
   ImageIcon as ImageIconLucide,
   Menu,
@@ -15,7 +16,7 @@ import {
   HOUR_START,
 } from "../utils/constants.js";
 
-export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPrint, onAddDays, isBusy, syncStatus }) {
+export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPrint, onAddDays, onOpenPacker, isBusy, syncStatus }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -40,12 +41,13 @@ export function MobileHoursColumn({ onExportImage, onExport, onImportClick, onPr
   return (
     <div className="export-include sticky left-0 z-40 w-14 shrink-0 self-start border-r border-slate-200/70 bg-white/65 backdrop-blur print:hidden">
       <div ref={menuRef} className="sticky top-0 z-50 flex h-16 items-center justify-center border-b border-slate-200/70 bg-white/95 backdrop-blur">
-        <button onClick={() => setIsMenuOpen((prev) => !prev)} aria-label="Abrir menú" className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
+        <button onClick={() => setIsMenuOpen((prev) => !prev)} aria-label="Abrir menÃº" className="cursor-pointer inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50">
           <Menu className="h-4 w-4" />
         </button>
         {isMenuOpen ? (
           <div className="absolute left-full top-2 z-50 ml-2 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-            <button onClick={() => handleAction(onAddDays)} title="Añadir días" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Plus className="h-5 w-5" /></button>
+            <button onClick={() => handleAction(onAddDays)} title="AÃ±adir dÃ­as" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-sky-500 text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Plus className="h-5 w-5" /></button>
+            <button onClick={() => handleAction(onOpenPacker)} title="Maleta" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-amber-400 text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Briefcase className="h-5 w-5" /></button>
             <button onClick={() => handleAction(onImportClick)} title="Importar" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Download className="h-5 w-5" /></button>
             <button onClick={() => handleAction(onExport)} title="Exportar" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Upload className="h-5 w-5" /></button>
             <button onClick={() => handleAction(onPrint)} title="Imprimir" className="cursor-pointer flex h-10 w-10 items-center justify-center rounded-full bg-black text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Printer className="h-5 w-5" /></button>

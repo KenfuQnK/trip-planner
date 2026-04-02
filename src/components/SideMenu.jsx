@@ -1,16 +1,34 @@
 import React from "react";
 import {
+  Briefcase,
+  Columns3,
   Download,
   ImageIcon as ImageIconLucide,
+  Map,
   Plus,
   Printer,
   Upload,
 } from "lucide-react";
 
-export function SideMenu({ onExportImage, onExport, onImportClick, onPrint, onAddDays, isBusy, syncStatus }) {
+export function SideMenu({
+  onExportImage,
+  onExport,
+  onImportClick,
+  onPrint,
+  onAddDays,
+  onOpenPacker,
+  onToggleView,
+  isMapView,
+  isBusy,
+  syncStatus,
+}) {
   return (
     <div className="hidden w-[68px] shrink-0 flex-col items-center gap-4 bg-black px-3 py-4 print:hidden md:flex">
-      <button onClick={onAddDays} title="Añadir días" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Plus className="h-5 w-5" /></button>
+      <button onClick={onAddDays} title="AÃ±adir dÃ­as" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Plus className="h-5 w-5" /></button>
+      <button onClick={onOpenPacker} title="Maleta" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-amber-400 text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Briefcase className="h-5 w-5" /></button>
+      <button onClick={onToggleView} title={isMapView ? "Vista columnas" : "Mapa"} className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}>
+        {isMapView ? <Columns3 className="h-5 w-5" /> : <Map className="h-5 w-5" />}
+      </button>
       <button onClick={onImportClick} title="Importar" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Download className="h-5 w-5" /></button>
       <button onClick={onExport} title="Exportar" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Upload className="h-5 w-5" /></button>
       <button onClick={onPrint} title="Imprimir" className="cursor-pointer flex h-11 w-11 items-center justify-center rounded-full bg-white text-black transition hover:scale-105 disabled:opacity-50" disabled={isBusy}><Printer className="h-5 w-5" /></button>
